@@ -34,3 +34,8 @@ python3 scripts/run_prompts.py
 # optional run arguments and default values
 python3 scripts/run_prompts.py --help
 ``` 
+
+# References
+
+**GCG Algorithm:**
+Zou, A., Wang, Z., Carlini, N., Nasr, M., Kolter, J. and Fredrikson, M. (n.d.). Universal and Transferable Adversarial Attacks on Aligned Language Models. [online] Available at: https://arxiv.org/pdf/2307.15043.

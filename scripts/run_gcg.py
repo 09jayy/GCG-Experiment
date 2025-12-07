@@ -30,10 +30,9 @@ def configure_run_arguments():
     parser.add_argument("-i","--input",help="input path .json file for prompts", default=default_params["input_json"])
     parser.add_argument("-s","--steps",help="number of steps for each prompt that gcg is run for", type=int,default=default_params["steps"])
     parser.add_argument("-m","--model", help="hugging face model id",default=default_params["model_id"]) 
-    parser.add_argument("-r","--range",nargs=2,help="set range for sub list of list of input prompts",default=default_params["range"])
+    parser.add_argument("-r","--range",nargs=2,help="set range for sub list of list of input prompts",type=int,default=default_params["range"])
 
-    args = parser.parse_args()
-    print(args.range)
+    args = parser.parse_args() 
 
     input_prompts = []
     with open(args.input) as f:
@@ -71,6 +70,7 @@ if __name__ == "__main__":
     llm_responses = run_parallel_prompts([x[0]+x[1] for x in results], model_id,num_workers=8)
 
     time_string = time.strftime("%Y-%m-%d_%H:%M:%S")
+    os.makedirs("results/", exist_ok=True)
     with open(f'results/gcg_results_{time_string}.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(['prompt', 'adv_suffix', 'llm_response', 'best_loss'])

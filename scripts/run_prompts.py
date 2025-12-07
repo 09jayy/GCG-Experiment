@@ -1,6 +1,7 @@
 import time
 import csv
 import argparse
+import os
 
 from functions.prompt_model import run_parallel_prompts
 
@@ -36,6 +37,7 @@ if __name__ == "__main__":
     results = run_parallel_prompts(args.input, args.model, num_workers=8)
 
     time_string = time.strftime("%Y-%m-%d_%H:%M:%S")
+    os.makedirs("results/", exist_ok=True)
     with open(f'results/prompt_results_{time_string}.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(['prompt', 'llm_response'])

@@ -1,10 +1,10 @@
 import torch
 import time
 import argparse
+import os
 
 from nanogcg import GCGConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import matplotlib.pyplot as plt
 import csv
 import multiprocessing as mp
 from functions.GCG_parallel import run_parallel_gcg

@@ -58,7 +58,6 @@ def prompt_worker(worker_id, task_queue, result_queue, model_id, num_gpus):
     torch.cuda.empty_cache()
     print(f"Worker {worker_id} finished")
 
-
 def run_parallel_prompts(prompts, model_id, num_workers=None):
     """Run prompts in parallel using multiprocessing"""
     if num_workers is None:

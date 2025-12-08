@@ -6,9 +6,9 @@ import os
 from nanogcg import GCGConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import csv
-import multiprocessing as mp
 from functions.GCG_parallel import run_parallel_gcg
 from functions.prompt_model import run_parallel_prompts
+from tabulate import tabulate
 
 def defined_default_params():
     return {
@@ -16,7 +16,8 @@ def defined_default_params():
         "steps": 300,
         "model_id": "Qwen/Qwen2-0.5B-Instruct",
         "range": None,
-        "run_gcg": True
+        "run_gcg": True,
+        "num_workers": 7
     }
 
 def configure_run_arguments():
@@ -30,18 +31,21 @@ def configure_run_arguments():
     parser.add_argument("-i","--input",help="input path .json file for prompts", default=default_params["input_json"])
     parser.add_argument("-s","--steps",help="number of steps for each prompt that gcg is run for", type=int,default=default_params["steps"])
     parser.add_argument("-m","--model", help="hugging face model id",default=default_params["model_id"]) 
+    parser.add_argument("-w","--num-workers",help="number of workers for parallel processing, depends on GPU memory capacity",type=int, default=default_params["num_workers"])
     parser.add_argument("-r","--range",nargs=2,help="set range for sub list of list of input prompts",type=int,default=default_params["range"])
 
     args = parser.parse_args() 
 
+    # Ignore lines in .txt files where line starts with '#' character
     input_prompts = []
     with open(args.input) as f:
         for line in f:
             if line[0] != "#": input_prompts.append(line.strip("\n"))
     args.input = input_prompts if args.range is None else input_prompts[int(args.range[0]):int(args.range[1])]
+
     return args
 
-def run_gcg(model_id, harmful_prompts):
+def run_gcg(model_id, harmful_prompts, num_workers):
     config = GCGConfig(
         num_steps=args.steps,
         search_width=64,
@@ -52,7 +56,7 @@ def run_gcg(model_id, harmful_prompts):
     )
 
     results = []
-    results = run_parallel_gcg(harmful_prompts, model_id, config, num_workers=8)
+    results = run_parallel_gcg(harmful_prompts, model_id, config, num_workers=num_workers)
     return results
 
 if __name__ == "__main__":
@@ -61,13 +65,15 @@ if __name__ == "__main__":
     # PARAMETERS
     model_id = args.model
     
-    # LLM Params    
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16).to("cuda")
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    torch.use_deterministic_algorithms(False)
+    # run gcg for all prompts
+    start = time.perf_counter()
+    results = run_gcg(model_id, args.input, args.num_workers)
+    gcg_timedelta = time.perf_counter() - start
     
-    results = run_gcg(model_id, args.input)
-    llm_responses = run_parallel_prompts([x[0]+x[1] for x in results], model_id,num_workers=8)
+    # run llm with prompts + adversial suffix
+    start = time.perf_counter()
+    llm_responses = run_parallel_prompts([x[0]+x[1] for x in results], model_id,num_workers=args.num_workers)
+    llm_responses_timedelta = time.perf_counter() - start
 
     time_string = time.strftime("%Y-%m-%d_%H:%M:%S")
     os.makedirs("results/", exist_ok=True)
@@ -79,11 +85,10 @@ if __name__ == "__main__":
             prompt, adv_suffix, loss = result
             _, response,_ = llm_response 
             
-            print(f"=====\n{prompt}\n=====")
-            print(f"response")
-            
             # Write row immediately (flushes to disk)
             writer.writerow([prompt, adv_suffix, response, loss])
             f.flush()  # Force write to disk after each row
 
-    print(f"Results saved to results/gcg_results_{time_string}.csv")
+    print(f"Results saved to: results/gcg_results_{time_string}.csv")
+    print(tabulate([["GCG",gcg_timedelta],["LLM Response",llm_responses_timedelta]], headers=["Task", "Time Taken"]))
+

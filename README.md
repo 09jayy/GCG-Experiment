@@ -23,7 +23,6 @@ python3 scripts/run_gcg.py
 
 # see run optional arguments and default values
 python3 scripts/run_gcg.py --help
-
 ```
 
 ## Run Prompts to LLM Model

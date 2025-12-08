@@ -1,7 +1,6 @@
 import nanogcg
 import torch
 
-from nanogcg import GCGConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import multiprocessing as mp
 

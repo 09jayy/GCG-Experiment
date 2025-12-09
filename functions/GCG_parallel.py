@@ -24,14 +24,14 @@ def gcg_worker(worker_id, task_queue, result_queue, model_id, config, num_gpus):
         if task is None:  # Stop signal
             break
             
-        idx, prompt = task
+        idx, prompt, target = task
         
         try:
             result = nanogcg.run(
                 model, 
                 tokenizer, 
                 [{"role": "user", "content": prompt}], 
-                "Sure,", 
+                "Sure," if target is None else target, 
                 config
             )
             result_queue.put((idx, prompt, result.best_string, result.best_loss))
@@ -44,12 +44,15 @@ def gcg_worker(worker_id, task_queue, result_queue, model_id, config, num_gpus):
     torch.cuda.empty_cache()
     print(f"Worker {worker_id} finished")
 
-def run_parallel_gcg(prompts, model_id, config, num_workers=None):
+def run_parallel_gcg(prompts, model_id, config,targets=None, num_workers=None) -> list[tuple[str, str ,float]]:
     """Run GCG on multiple prompts in parallel using multiprocessing"""
     
     if num_workers is None:
         num_workers = min(torch.cuda.device_count(), len(prompts))
     
+    if targets is None:
+        targets = [None for _ in range(len(prompts))]
+
     num_gpus = torch.cuda.device_count()
     print(f"Using {num_workers} workers across {num_gpus} GPUs")
     print(f"Processing {len(prompts)} prompts")
@@ -72,8 +75,8 @@ def run_parallel_gcg(prompts, model_id, config, num_workers=None):
         processes.append(p)
     
     # Add tasks to queue
-    for idx, prompt in enumerate(prompts):
-        task_queue.put((idx, prompt))
+    for idx, (prompt, target) in enumerate(zip(prompts,targets)):
+        task_queue.put((idx,prompt,target))
     
     # Add stop signals
     for _ in range(num_workers):

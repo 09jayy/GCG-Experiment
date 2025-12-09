@@ -45,9 +45,9 @@ def configure_run_arguments():
 
     return args
 
-def run_gcg(model_id, harmful_prompts, num_workers):
+def run_gcg(model_id, harmful_prompts, steps, num_workers, targets=None) -> list[tuple[str, str ,float]]:
     config = GCGConfig(
-        num_steps=args.steps,
+        num_steps=steps,
         search_width=64,
         topk=64,
         seed=42,
@@ -56,7 +56,7 @@ def run_gcg(model_id, harmful_prompts, num_workers):
     )
 
     results = []
-    results = run_parallel_gcg(harmful_prompts, model_id, config, num_workers=num_workers)
+    results = run_parallel_gcg(harmful_prompts, model_id, config, num_workers=num_workers, targets=targets)
     return results
 
 if __name__ == "__main__":
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     
     # run gcg for all prompts
     start = time.perf_counter()
-    results = run_gcg(model_id, args.input, args.num_workers)
+    results = run_gcg(model_id, args.input, args.steps, args.num_workers)
     gcg_timedelta = time.perf_counter() - start
     
     # run llm with prompts + adversial suffix

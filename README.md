@@ -35,6 +35,13 @@ python3 scripts/run_prompts.py --help
 ``` 
 
 # References
-
-**GCG Algorithm:**
-Zou, A., Wang, Z., Carlini, N., Nasr, M., Kolter, J. and Fredrikson, M. (n.d.). Universal and Transferable Adversarial Attacks on Aligned Language Models. [online] Available at: https://arxiv.org/pdf/2307.15043.
+```text
+@misc{zou2023universal,
+      title={Universal and Transferable Adversarial Attacks on Aligned Language Models}, 
+      author={Andy Zou and Zifan Wang and J. Zico Kolter and Matt Fredrikson},
+      year={2023},
+      eprint={2307.15043},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+```

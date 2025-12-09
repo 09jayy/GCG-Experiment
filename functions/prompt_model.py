@@ -38,7 +38,7 @@ def prompt_worker(worker_id, task_queue, result_queue, model_id, num_gpus):
             
             output = model.generate(
                 prompt_ids,
-                max_new_tokens=600,
+                max_new_tokens=300,
                 do_sample=False
             )
             
@@ -58,7 +58,7 @@ def prompt_worker(worker_id, task_queue, result_queue, model_id, num_gpus):
     torch.cuda.empty_cache()
     print(f"Worker {worker_id} finished")
 
-def run_parallel_prompts(prompts, model_id, num_workers=None):
+def run_parallel_prompts(prompts, model_id, num_workers=None) -> list[tuple[str,str,str]]:
     """Run prompts in parallel using multiprocessing"""
     if num_workers is None:
         num_workers = min(torch.cuda.device_count(), len(prompts))

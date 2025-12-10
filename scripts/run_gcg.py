@@ -81,6 +81,7 @@ if __name__ == "__main__":
     llm_responses = run_parallel_prompts([x[0]+x[1] for x in results], model_id,num_workers=args.num_workers)
     llm_responses_timedelta = time.perf_counter() - start
 
+    time_string = time.strftime("%Y-%m-%d_%H:%M:%S")
     os.makedirs("results/", exist_ok=True)
     with open(f'results/gcg_results_{time_string}.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
